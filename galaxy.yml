@@ -1,0 +1,20 @@
+namespace: schoenserver
+name: general
+version: 1.0.0
+
+readme: README.md
+authors:
+- Steffen Schön <steffen1995@gmail.com>
+description: General internal modules and roles
+license:
+- MIT
+tags: []
+
+# Collections that this collection requires to be installed for it to be usable. The key of the dict is the
+# collection label 'namespace.name'. The value is a version range
+# L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
+# range specifiers can be set and are separated by ','
+dependencies: {}
+
+# The URL of the originating SCM repository
+repository: https://gitlab.schoenserver.de/iac/ansible-collection-general
