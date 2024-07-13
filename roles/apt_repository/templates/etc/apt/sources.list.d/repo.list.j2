@@ -1,0 +1,1 @@
+deb [arch="amd64" signed-by=/etc/apt/keyrings/{{ apt_repository_key_id }}.asc] {{ apt_repository_repository if not apt_repository_apt_cacher else (apt_repository_repository | replace('https://', 'http://HTTPS///'))}}
