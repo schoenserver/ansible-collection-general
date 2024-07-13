@@ -1,4 +1,4 @@
-- name: "apt_repository ({{ apt_repository_name }}) | deploy signing key"
+- name: "{{ apt_repository_name }} | deploy signing key"
   ansible.builtin.copy:
     content: "{{ apt_repository_key }}"
     dest: "/etc/apt/keyrings/{{ apt_repository_key_id }}.asc"
@@ -6,7 +6,7 @@
     group: root
     mode: "0644"
 
-- name: "apt_repository ({{ apt_repository_name }}) | deploy repository source"
+- name: "{{ apt_repository_name }} | deploy repository source"
   ansible.builtin.template:
     src: etc/apt/sources.list.d/repo.list.j2
     dest: "/etc/apt/sources.list.d/{{ apt_repository_name }}.list"
@@ -15,5 +15,5 @@
     mode: "0644"
   notify: Update apt cache
 
-- name: "apt_repository ({{ apt_repository_name }}) | flush handlers"
+- name: "Flush handlers"
   ansible.builtin.meta: flush_handlers
