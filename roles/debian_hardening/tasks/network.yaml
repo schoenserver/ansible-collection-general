@@ -1,0 +1,89 @@
+- name: network | disable ipv6
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "{{ debian_hardening_disable_ipv6 | ternary('1', '0') }}"
+    sysctl_set: true
+  loop:
+    - net.ipv6.conf.all.disable_ipv6
+    - net.ipv6.conf.default.disable_ipv6
+    - net.ipv6.conf.lo.disable_ipv6
+
+- name: network | log suspicious packets
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_set: true
+  loop:
+    - net.ipv4.conf.all.log_martians
+    - net.ipv4.conf.default.log_martians
+
+- name: network | disable icmp4
+  ansible.posix.sysctl:
+    name: net.ipv4.icmp_echo_ignore_all
+    value: "{{ debian_hardening_disable_icmp | ternary('1', '0') }}"
+    sysctl_set: true
+
+- name: network | configure routing and forwarding
+  block:
+    - name: network | disable forwarding
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: "{{ debian_hardening_disable_routing | ternary('0', '1') }}"
+        sysctl_set: true
+      loop:
+        - net.ipv4.ip_forward
+        - net.ipv6.conf.all.forwarding
+
+    - name: network | do not accept redirects
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: "{{ debian_hardening_disable_routing | ternary('0', '1') }}"
+        sysctl_set: true
+      loop:
+        - net.ipv4.conf.default.accept_redirects
+        - net.ipv4.conf.all.accept_redirects
+        - net.ipv4.conf.default.accept_source_route
+        - net.ipv6.conf.all.accept_redirects
+        - net.ipv6.conf.default.accept_redirects
+
+    - name: network | disable icmp redirects
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: "{{ debian_hardening_disable_routing | ternary('0', '1') }}"
+        sysctl_set: true
+        state: present
+        reload: true
+      loop:
+        - net.ipv4.conf.all.send_redirects
+        - net.ipv4.conf.default.send_redirects
+        - net.ipv4.conf.all.secure_redirects
+        - net.ipv4.conf.default.secure_redirects
+
+- name: network | disable tcp timestamps
+  ansible.posix.sysctl:
+    name: net.ipv4.tcp_timestamps
+    value: "0"
+    sysctl_set: true
+    state: present
+    reload: true
+
+- name: network | configure reverse path filtering
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "{{ debian_hardening_rp_filter | ternary('1', '0') }}"
+    sysctl_set: true
+  loop:
+    - net.ipv4.conf.default.rp_filter
+    - net.ipv4.conf.all.rp_filter
+
+- name: network | configure tcp syncookies
+  ansible.posix.sysctl:
+    name: net.ipv4.tcp_syncookies
+    value: "{{ debian_hardening_syncookies | ternary('1', '0') }}"
+    sysctl_set: true
+
+- name: network | configure use of rfc1337
+  ansible.posix.sysctl:
+    name: net.ipv4.debian_hardening_rfc1337
+    value: "{{ debian_hardening_rp_filter | ternary('1', '0') }}"
+    sysctl_set: true

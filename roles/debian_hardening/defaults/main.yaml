@@ -1,0 +1,66 @@
+debian_hardening_mac: true
+debian_hardening_disable_ipv6: true
+
+debian_hardening_journalctl_max_use: 500M
+
+debian_hardening_disable_icmp: true
+debian_hardening_disable_routing: true
+debian_hardening_rp_filter: true
+debian_hardening_syncookies: false
+debian_hardening_rfc1337: true
+
+debian_hardening_apt_seccomp: true
+debian_hardening_apt_disable_unauthenticated: true
+debian_hardening_apt_error_on_any: true
+
+debian_hardening_vm_swappiness: "1"
+
+# systemd-networkd seems to require this
+debian_hardening_disable_kexec: false
+debian_hardening_disable_sysrq: true
+
+debian_hardening_unused_fs:
+  - freevxfs
+  - jffs2
+  - hfs
+  - hfsplus
+  - squashfs
+  - udf
+  - vfat
+
+debian_hardening_unused_protocols:
+  - dccp
+  - rds
+  - tipc
+  - sctp
+
+debian_hardening_ssh_users:
+  - admin
+
+debian_hardening_disable_root: true
+
+debian_hardening_boot_params:
+  # disables slab merging, which significantly increases the difficulty of heap exploitation
+  - slab_nomerge
+  # enables zeroing of memory during allocation and free time
+  - init_on_alloc=1
+  - init_on_free=1
+  #  randomise page allocator freelists
+  - page_alloc.shuffle=1
+  # enable Kernel Page Table isolation
+  - pti=on
+  # randomise the kernel stack offset on each syscall
+  - randomize_kstack_offset=on
+  # disable vsyscalls
+  - vsyscall=none
+  # disable debugfs
+  - debugfs=off
+  # panic on oopses
+  - oops=panic
+  # Enable IOMMU
+  - intel_iommu=on
+  - amd_iommu=on
+  - efi=disable_early_pci_dma
+  # MAC via apparmor
+  - apparmor=1
+  - security=apparmor

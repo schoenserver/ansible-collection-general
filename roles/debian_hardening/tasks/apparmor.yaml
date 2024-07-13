@@ -1,0 +1,6 @@
+- name: mac | install required packages
+  ansible.builtin.apt:
+    name:
+      - apparmor-utils
+      - apparmor-profiles
+      - apparmor-profiles-extra

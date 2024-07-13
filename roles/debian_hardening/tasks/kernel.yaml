@@ -1,0 +1,135 @@
+########################################
+##### Kernel Self Protection       #####
+########################################
+
+- name: kernel | enable kernel self protection
+  ansible.posix.sysctl:
+    name: kernel.kptr_restrict
+    value: "2"
+    sysctl_set: true
+
+- name: kernel | restrict dmesg to CAP_SYSLOG
+  ansible.posix.sysctl:
+    name: kernel.dmesg_restrict
+    value: "1"
+    sysctl_set: true
+
+- name: kernel | disable sysrq
+  ansible.posix.sysctl:
+    name: kernel.sysrq
+    value: "{{ debian_hardening_disable_sysrq | ternary('0', '4') }}"
+    sysctl_set: true
+
+- name: kernel | restrict eBPF to CAP_BPF
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+  loop:
+    - { name: kernel.unprivileged_bpf_disabled, value: "1" }
+    - { name: net.core.bpf_jit_harden, value: "2" }
+
+- name: kernel | restrict loading TTY line disciples to CAP_SYS_MODULE
+  ansible.posix.sysctl:
+    name: dev.tty.ldisc_autoload
+    value: "0"
+    sysctl_set: true
+
+- name: kernel | restrict userfaultfd syscall to CAP_SYS_PTRACE
+  ansible.posix.sysctl:
+    name: vm.unprivileged_userfaultfd
+    value: "0"
+    sysctl_set: true
+
+- name: kernel | disable kexec
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "{{  debian_hardening_disable_kexec | ternary('1', '0') }}"
+    sysctl_set: true
+  loop:
+    - kernel.modules_disabled
+    - kernel.kexec_load_disabled
+
+- name: kernel | restrict performance events to CAP_SYS_ADMIN
+  ansible.posix.sysctl:
+    name: kernel.perf_event_paranoid
+    value: "3"
+    sysctl_set: true
+
+########################################
+##### User CAP_SYS_PTRACE          #####
+########################################
+
+- name: kernel | restrict ptrace syscall to CAP_SYS_PTRACE
+  ansible.posix.sysctl:
+    name: kernel.yama.ptrace_scope
+    value: "2"
+    sysctl_set: true
+
+- name: kernel | enable ASLR
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+  loop:
+    - { name: vm.mmap_rnd_bits, value: "32" }
+    - { name: vm.mmap_rnd_compat_bits, value: "16" }
+
+- name: kernel | randomize the addresses for mmap base, heap, stack, and VDSO pages
+  ansible.posix.sysctl:
+    name: kernel.randomize_va_space
+    value: "2"
+    sysctl_set: true
+
+- name: kernel | protect links
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_set: true
+  loop:
+    - fs.protected_symlinks
+    - fs.protected_hardlinks
+
+- name: kernel | protect queues
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "2"
+    sysctl_set: true
+  loop:
+    - fs.protected_fifos
+    - fs.protected_regular
+
+########################################
+##### Modules                      #####
+########################################
+
+- name: kernel | disable unneccessary modules
+  ansible.builtin.template:
+    src: etc/modprobe.d/{{ item }}.conf.j2
+    dest: /etc/modprobe.d/{{ item }}.conf
+    owner: root
+    group: root
+    mode: "0600"
+  loop:
+    - disable-protocols
+    - disable-filesystems
+
+########################################
+##### Other                        #####
+########################################
+
+- name: kernel | disable coredumps
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+  loop:
+    - { name: kernel.core_pattern, value: "|/bin/false" }
+    - { name: fs.suid_dumpable, value: "0" }
+    - { name: kernel.core_uses_pid, value: "1" }
+
+- name: kernel | set swappiness
+  ansible.posix.sysctl:
+    name: vm.swappiness
+    value: "{{ debian_hardening_vm_swappiness }}"
+    sysctl_set: true

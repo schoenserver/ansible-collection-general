@@ -1,0 +1,93 @@
+########################################
+##### Packages                     #####
+########################################
+
+- name: general | install packages
+  ansible.builtin.apt:
+    name:
+      - libpam-tmpdir
+      - debian-goodies
+
+########################################
+##### Permissions                  #####
+########################################
+
+- name: general | fix cron permissions
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0700"
+  loop:
+    - /etc/cron.hourly
+    - /etc/cron.daily
+    - /etc/cron.weekly
+    - /etc/cron.monthly
+    - /etc/cron.d
+
+- name: general | fix crontab permissions
+  ansible.builtin.file:
+    dest: /etc/crontab
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: general | fix permissions on sudoers
+  ansible.builtin.file:
+    path: /etc/sudoers.d
+    owner: root
+    group: root
+    mode: "0750"
+
+########################################
+##### Users                        #####
+########################################
+
+- name: users | ensure root login is not possible via console
+  ansible.builtin.copy:
+    dest: /etc/securetty
+    content: ""
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: users | restrict su command to wheel group
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/su
+    insertbefore: BOF
+    line: auth required pam_wheel.so use_uid
+
+- name: users | configure shadow password hashing
+  ansible.builtin.copy:
+    dest: /etc/pam.d/passwd
+    content: password required pam_unix.so sha512 shadow nullok rounds=65536
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: users | lock root account
+  ansible.builtin.user:
+    name: root
+    # lock account
+    password: !
+  when: debian_hardening_disable_root
+
+########################################
+##### Other                        #####
+########################################
+
+- name: general | disable usb-storage
+  ansible.builtin.copy:
+    dest: "/etc/modprobe.d/usb_storage.conf"
+    content: install usb-storage /bin/false
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: general | set boot parameters
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX="(.*)"$'
+    line: 'GRUB_CMDLINE_LINUX="{{ hardening_boot_params | join(" ") }}"'
+    backrefs: true
+  notify: Update grub

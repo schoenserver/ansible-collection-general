@@ -1,0 +1,21 @@
+- name: Apply general hardening
+  ansible.builtin.import_tasks: general.yaml
+
+- name: Configure mandatory access control using apparmor
+  ansible.builtin.import_tasks: apparmor.yaml
+  when: debian_hardening_mac
+
+- name: Harden network configuration
+  ansible.builtin.import_tasks: network.yaml
+
+- name: Harden kernel
+  ansible.builtin.import_tasks: kernel.yaml
+
+- name: Configure logging
+  ansible.builtin.import_tasks: logging.yaml
+
+- name: Harden apt
+  ansible.builtin.import_tasks: apt.yaml
+
+- name: Harden sshd
+  ansible.builtin.import_tasks: sshd.yaml

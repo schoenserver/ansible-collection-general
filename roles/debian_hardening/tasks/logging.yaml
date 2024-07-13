@@ -1,0 +1,26 @@
+- name: logging | auditd
+  block:
+    - name: logging | ensure auditd is installed
+      ansible.builtin.apt:
+        name: auditd
+    - name: hardening | deploy audit rules
+      ansible.builtin.copy:
+        src: etc/audit/rules.d/audit.rules
+        dest: /etc/audit/rules.d/audit.rules
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart auditd
+    - name: logging | ensure auditd is started and enabled
+      ansible.builtin.systemd_service:
+        name: auditd
+        state: started
+        enabled: true
+
+- name: logging | deploy journald configuration
+  ansible.builtin.template:
+    src: etc/systemd/journald.conf.j2
+    dest: /etc/systemd/journald.conf
+    owner: root
+    group: root
+    mode: "0644"

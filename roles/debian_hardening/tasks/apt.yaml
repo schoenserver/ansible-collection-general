@@ -1,0 +1,26 @@
+- name: apt | only allow installation of signed packages
+  ansible.builtin.copy:
+    src: etc/apt/apt.conf.d/40deny-unauthenticated
+    dest: /etc/apt/apt.conf.d/40deny-unauthenticated
+    owner: root
+    group: root
+    mode: "0644"
+  when: debian_hardening_apt_disable_unauthenticated
+
+- name: apt | errors on transitive failures
+  ansible.builtin.copy:
+    src: etc/apt/apt.conf.d/40error-on-any
+    dest: /etc/apt/apt.conf.d/40error-on-any
+    owner: root
+    group: root
+    mode: "0644"
+  when: debian_hardening_apt_error_on_any
+
+- name: apt | enable seccomp sandbox
+  ansible.builtin.copy:
+    src: etc/apt/apt.conf.d/40sandbox
+    dest: /etc/apt/apt.conf.d/40sandbox
+    owner: root
+    group: root
+    mode: "0644"
+  when: debian_hardening_apt_seccomp
