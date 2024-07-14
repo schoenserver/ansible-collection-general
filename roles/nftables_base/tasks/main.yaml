@@ -1,0 +1,22 @@
+- name: Install nftables
+  ansible.builtin.apt:
+    name:
+      - nftables
+
+- name: Ensure /etc/nftables.conf.d exists
+  ansible.builtin.file:
+    path: /etc/nftables.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy nftables basic configuration
+  ansible.builtin.copy:
+    src: etc/nftables.conf
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: nft -cf %s
+  notify: Reload nftables rules

@@ -1,0 +1,9 @@
+#!/usr/sbin/nft -f
+
+add chain filter {{ nftables_filter_name }} {}
+
+{% for rule in nftables_filter_rules %}
+add rule filter {{ nftables_filter_name }} {{ rule | nft_resolve(nftables_filter_host_aliases, nftables_filter_service_aliases) | nft_rule }}
+{% endfor %}
+
+add rule filter {{ nftables_filter_direction }} jump {{ nftables_filter_name }}

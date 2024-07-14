@@ -1,0 +1,8 @@
+nftables_filter_name: ""
+nftables_filter_direction: input
+nftables_filter_rules: []
+
+nftables_filter_host_aliases: []
+nftables_filter_service_aliases: []
+
+nftables_filter_skip_validation: false

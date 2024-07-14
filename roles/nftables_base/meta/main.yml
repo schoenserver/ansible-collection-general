@@ -1,0 +1,10 @@
+galaxy_info:
+  author: Steffen Schön
+  description: Local filtering configuration using nftables.
+  license: MIT
+
+  min_ansible_version: "2.9"
+
+  galaxy_tags: []
+
+dependencies: []

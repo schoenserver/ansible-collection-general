@@ -1,0 +1,48 @@
+- name: nftables {{ nftables_filter_name }} | validation
+  when: not nftables_filter_skip_validation
+  block:
+    - name: nftables {{ nftables_filter_name }} | validate direction
+      ansible.builtin.assert:
+        that:
+          - nftables_filter_direction in ["input", "forward"]
+        msg: nftables_filter_direction can only be input or forward
+
+    - name: nftables {{ nftables_filter_name }} | validate name
+      ansible.builtin.assert:
+        that:
+          - nftables_filter_name is match("^[a-z0-9]+$")
+        msg: nftables_filter_name must be a non empty alphanumeric string
+
+    - name: nftables {{ nftables_filter_name }} | validate filter rules
+      ansible.utils.validate:
+        data: "{{ nftables_filter_rules }}"
+        criteria: "{{ lookup('ansible.builtin.file', 'jsonschema/rules.json') }}"
+        engine: ansible.utils.jsonschema
+      vars:
+        ansible_jsonschema_draft: draft7
+
+    - name: nftables {{ nftables_filter_name }} | validate host aliases
+      ansible.utils.validate:
+        data: "{{ nftables_filter_host_aliases }}"
+        criteria: "{{ lookup('ansible.builtin.file', 'jsonschema/host_aliases.json') }}"
+        engine: ansible.utils.jsonschema
+      vars:
+        ansible_jsonschema_draft: draft7
+
+    - name: nftables {{ nftables_filter_name }} | validate host aliases
+      ansible.utils.validate:
+        data: "{{ nftables_filter_service_aliases }}"
+        criteria: "{{ lookup('ansible.builtin.file', 'jsonschema/service_aliases.json') }}"
+        engine: ansible.utils.jsonschema
+      vars:
+        ansible_jsonschema_draft: draft7
+
+- name: nftables {{ nftables_filter_name }} | deploy nftables configuration
+  ansible.builtin.template:
+    src: etc/nftables.conf.d/nft.conf.j2
+    dest: /etc/nftables.conf.d/{{ nftables_filter_name }}.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: nft -cf %s
+  notify: Reload nftables rules
